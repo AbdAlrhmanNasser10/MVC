@@ -1,0 +1,28 @@
+{
+    "name": "mvc/elframework",
+    "description": "this is first mvc app to make a powerful apps on interactive web pages",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "App\\": "/app"
+        }
+    },
+    "authors": [
+        {
+            "name": "php"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=8.2.12",
+        "php/elframework": "1.0"
+    },
+    "version": "1.0",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "elframework"
+        }
+    ]
+}

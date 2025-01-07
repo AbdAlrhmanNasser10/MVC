@@ -1,0 +1,37 @@
+{
+    "packages": [
+        {
+            "name": "php/elframework",
+            "version": "1.0",
+            "version_normalized": "1.0.0.0",
+            "dist": {
+                "type": "path",
+                "url": "elframework",
+                "reference": "9965928131b87d9912d52f9f6c883c79e83b031b"
+            },
+            "type": "library",
+            "installation-source": "dist",
+            "autoload": {
+                "psr-4": {
+                    "Elframework\\": "framework/",
+                    "Ililuminates\\": "ililuminates/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "php"
+                }
+            ],
+            "description": "framework",
+            "transport-options": {
+                "relative": true
+            },
+            "install-path": "../php/elframework"
+        }
+    ],
+    "dev": true,
+    "dev-package-names": []
+}

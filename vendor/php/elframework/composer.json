@@ -1,0 +1,20 @@
+{
+    "name": "php/elframework",
+    "description": "framework",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Elframework\\": "framework/",
+            "Ililuminates\\": "ililuminates/"
+        }
+    },
+    "authors": [
+        {
+            "name": "php"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {},
+    "version": "1.0"
+}
