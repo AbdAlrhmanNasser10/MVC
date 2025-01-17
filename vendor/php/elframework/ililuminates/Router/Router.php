@@ -4,7 +4,7 @@ namespace Ililuminates\Router;
 
 class Router
 {
-    protected $routes = [
+    protected static $routes = [
         'GET'=>[],
         'POST'=>[],
         'PUT'=>[],
@@ -12,19 +12,37 @@ class Router
         'DELETE'=>[]
     ];
 
-    public function add(string $method , string $route , $controller,$action, array $middlewares = [] ){
+    /**
+     * @param string $method
+     * @param string $route
+     * @param mixed $controller
+     * @param mixed $action
+     * @param array $middlewares
+     * 
+     * @return void
+     */
+    public static function add(string $method , string $route , $controller,$action, array $middlewares = [] ){
         $route = ltrim($route,'/');
-        $this->routes[$method][$route] = compact('controller', 'action', 'middlewares');
+        self::$routes[$method][$route] = compact('controller', 'action', 'middlewares');
     }
 
+    /**
+     * @return static routes
+     */
     public function routes(){
-        return $this->routes;
+        return static::$routes;
     }
 
-    public function dispatch($uri,$method){
+    /**
+     * @param mixed $uri
+     * @param mixed $method
+     * 
+     * @return void
+     */
+    public static function dispatch($uri,$method){
         $uri = ltrim($uri,'/MVC/public/');
-        if(isset($this->routes[$method][$uri])){
-        $data = $this->routes[$method][$uri];
+        if(isset(static::$routes[$method][$uri])){
+        $data = static::$routes[$method][$uri];
 
         if(is_object($data['action'])){
             $data['action']();
