@@ -5,15 +5,15 @@ class HomeController
 {
     public function index()
     {
-        echo "Welcome to index page";
+        return "Welcome to index page";
     }
     public function about()
     {
-        echo "Welcome to about page";
+        return "Welcome to about page";
     }
 
-    public function article($id )
+    public function article($id, $name)
     {
-        echo "Welcome to article page id = $id";
+        return "Welcome to article page id = $id / name = $name";
     }
 }

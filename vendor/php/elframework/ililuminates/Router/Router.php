@@ -30,7 +30,7 @@ class Router
      *
      * @return void
      */
-    public static function add(string $method, string $route, $controller, $action, array $middlewares = [])
+    public static function add(string $method, string $route, $controller, $action = null, array $middlewares = [])
     {
         $route                         = ltrim($route, '/');
         self::$routes[$method][$route] = compact('controller', 'action', 'middlewares');
@@ -59,12 +59,18 @@ class Router
             $pattern = "#^$pattern$#";
 
             if (preg_match($pattern, $uri, $match)) {
-                $controller  = $value['controller'];
-                $action      = $value['action'];
-                $middlewares = $value['middlewares'];
-                $params      = array_filter($match, 'is_string', ARRAY_FILTER_USE_KEY);
-                // var_dump($params);
-                return call_user_func_array([new $controller, $action], $params);
+                $params     = array_filter($match, 'is_string', ARRAY_FILTER_USE_KEY);
+                $controller = $value['controller'];
+                if (is_object($controller)) {
+                    echo $controller(...$params);
+                    return '';
+                } else {
+                    $action      = $value['action'];
+                    $middlewares = $value['middlewares'];
+                    // var_dump($params);
+                    echo call_user_func_array([new $controller, $action], $params);
+                    return '';
+                }
             }
         }
 

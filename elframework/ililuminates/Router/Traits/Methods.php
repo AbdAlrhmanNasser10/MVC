@@ -12,7 +12,7 @@ trait Methods
      *
      * @return void
      */
-    public static function get(string $route, $controller, $action, array $middlewares = []): void
+    public static function get(string $route, $controller, $action = null, array $middlewares = []): void
     {
         parent::add('GET', $route, $controller, $action, $middlewares);
     }
