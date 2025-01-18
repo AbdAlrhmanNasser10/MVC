@@ -2,20 +2,19 @@
 namespace Ililuminates;
 
 use Ililuminates\Router\Route;
-use App\Http\Controllers\HomeController;
 
 class Application
 {
     protected $router;
 
-
-    public function start(){
+    public function start()
+    {
         $this->router = new Route;
-        include route_path();
-
+        include route_path('web.php');
     }
 
-    public function __destruct(){
+    public function __destruct()
+    {
         $this->router->dispatch($_SERVER['REQUEST_URI'], $_SERVER['REQUEST_METHOD']);
     }
 }
