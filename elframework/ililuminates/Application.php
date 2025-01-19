@@ -3,6 +3,7 @@ namespace Ililuminates;
 
 use App\Core;
 use Ililuminates\Router\Route;
+use Ililuminates\Router\Segment;
 
 class Application
 {
@@ -11,7 +12,11 @@ class Application
     public function start()
     {
         $this->router = new Route;
-        $this->webRoute();
+        if(Segment::get(0) == 'api'){
+            $this->apiRoute();
+        }else{
+            $this->webRoute();
+        }
     }
 
     public function __destruct()

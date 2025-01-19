@@ -1,6 +1,8 @@
 <?php
 namespace Ililuminates\Router;
 
+use Ililuminates\Middleware\Middleware;
+
 class Router
 {
     protected static $routes = [
@@ -64,7 +66,6 @@ class Router
 
                 if (is_object($controller)) {
 
-
                     $value['middleware'] = $value['action'];
                     $middleware          = $value['middleware'];
 
@@ -73,13 +74,11 @@ class Router
                     };
 
                     //Processing middleware if using anonymous fuction
-                    $next = self::handleMiddleware($middleware, $next);
+                    $next = Middleware::handleMiddleware($middleware, $next);
 
                     echo $next($uri);
 
-
                 } else {
-
 
                     $action     = $value['action'];
                     $middleware = $value['middleware'];
@@ -87,7 +86,7 @@ class Router
                         return call_user_func_array([new $controller, $action], $params);
                     };
                     //Processing middleware if using a controller
-                    $next = self::handleMiddleware($middleware, $next);
+                    $next = Middleware::handleMiddleware($middleware, $next);
 
                     echo $next($uri);
                 }
@@ -97,19 +96,5 @@ class Router
         }
 
         throw new \Exception("This page $uri not found");
-    }
-
-    public static function handleMiddleware($middleware, $next)
-    {
-        if (! empty($middleware) && is_array($middleware)) {
-            foreach (array_reverse($middleware) as $middle) {
-                $next = function ($request) use ($middle, $next) {
-                    $role = explode(',',$middle);
-                    $middleware = array_shift($role);
-                    return (new $middleware)->handle($request, $next,$role);
-                };
-            }
-        }
-        return $next;
     }
 }
