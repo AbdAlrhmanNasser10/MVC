@@ -1,9 +1,15 @@
 <?php
 
+if(! function_exists('url')){
+    function url(string $url = ''):string{
+        return $_SERVER['REQUEST_SCHEME'] . '://' . $_SERVER['HTTP_HOST'] . '/MVC/public/' . ltrim($url,'/');
+    }
+}
+
 if (! function_exists('base_path')) {
     function base_path(string $file = null)
     {
-        return getcwd() . "/../" . $file;
+        return ROOT_PATH . "/../" . $file;
     }
 }
 

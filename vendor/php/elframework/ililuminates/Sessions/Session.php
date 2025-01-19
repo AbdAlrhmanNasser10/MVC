@@ -3,6 +3,15 @@ namespace Ililuminates\Sessions;
 
 class Session
 {
+
+    public function __construct()
+    {
+        session_save_path(config('session.session_save_path'));
+        ini_set('session.gc_probability', 1);
+        session_start([
+            'cookie_lifetime'=>config('session.expiration_timeout')
+        ]);
+    }
     /**
      * @param string $key
      * @param mixed|null $value
@@ -15,6 +24,16 @@ class Session
             $_SESSION[$key] = encrypt($value);
         }
         return isset($_SESSION[$key]) ? decrypt($_SESSION[$key]) : '';
+    }
+    
+    /**
+     * @param string $key
+     *
+     * @return mixed
+     */
+    public static function get(string $key): mixed
+    {
+        return isset($_SESSION[$key]) ? decrypt($_SESSION[$key]) : $key;
     }
 
     /**

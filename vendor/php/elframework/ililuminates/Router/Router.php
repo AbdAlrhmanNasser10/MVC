@@ -26,14 +26,14 @@ class Router
      * @param string $route
      * @param mixed $controller
      * @param mixed $action
-     * @param array $middlewares
+     * @param array $middleware
      *
      * @return void
      */
-    public static function add(string $method, string $route, $controller, $action = null, array $middlewares = [])
+    public static function add(string $method, string $route, $controller, $action = null, array $middleware = [])
     {
         $route                         = ltrim($route, '/');
-        self::$routes[$method][$route] = compact('controller', 'action', 'middlewares');
+        self::$routes[$method][$route] = compact('controller', 'action', 'middleware');
     }
 
     /**
@@ -61,19 +61,55 @@ class Router
             if (preg_match($pattern, $uri, $match)) {
                 $params     = array_filter($match, 'is_string', ARRAY_FILTER_USE_KEY);
                 $controller = $value['controller'];
+
                 if (is_object($controller)) {
-                    echo $controller(...$params);
-                    return '';
+
+
+                    $value['middleware'] = $value['action'];
+                    $middleware          = $value['middleware'];
+
+                    $next = function ($request) use ($controller, $params) {
+                        return $controller(...$params);
+                    };
+
+                    //Processing middleware if using anonymous fuction
+                    $next = self::handleMiddleware($middleware, $next);
+
+                    echo $next($uri);
+
+
                 } else {
-                    $action      = $value['action'];
-                    $middlewares = $value['middlewares'];
-                    // var_dump($params);
-                    echo call_user_func_array([new $controller, $action], $params);
-                    return '';
+
+
+                    $action     = $value['action'];
+                    $middleware = $value['middleware'];
+                    $next       = function ($request) use ($controller, $action, $params) {
+                        return call_user_func_array([new $controller, $action], $params);
+                    };
+                    //Processing middleware if using a controller
+                    $next = self::handleMiddleware($middleware, $next);
+
+                    echo $next($uri);
                 }
+
+                return '';
             }
         }
 
         throw new \Exception("This page $uri not found");
+    }
+
+    public static function handleMiddleware($middleware, $next)
+    {
+        if (! empty($middleware) && is_array($middleware)) {
+            foreach (array_reverse($middleware) as $middle) {
+                $next = function ($request) use ($middle, $next) {
+                    $role = explode(',',$middle);
+                    $middleware = array_shift($role);
+                    return (new $middleware)->handle($request, $next,$role);
+                };
+            }
+        }
+        return $next;
     }
 }

@@ -19,6 +19,10 @@ class ComposerStaticInit5f6a85df31bb8c29e50f4314720dd0ea
         array (
             'Elframework\\' => 12,
         ),
+        'C' => 
+        array (
+            'Contracts\\' => 10,
+        ),
         'A' => 
         array (
             'App\\' => 4,
@@ -33,6 +37,10 @@ class ComposerStaticInit5f6a85df31bb8c29e50f4314720dd0ea
         'Elframework\\' => 
         array (
             0 => __DIR__ . '/..' . '/php/elframework/framework',
+        ),
+        'Contracts\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/php/elframework/Contracts',
         ),
         'App\\' => 
         array (
