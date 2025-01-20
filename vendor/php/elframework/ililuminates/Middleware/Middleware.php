@@ -5,15 +5,15 @@ use App\Core;
 
 class Middleware
 {
-    public static function handleMiddleware($middleware, $next)
+    public static function handleMiddleware($middleware, $next, $type = 'web')
     {
         if (! empty($middleware) && is_array($middleware)) {
             foreach (array_reverse($middleware) as $middle) {
-                $next = function ($request) use ($middle, $next) {
+                $next = function ($request) use ($middle, $next, $type) {
                     $role       = explode(',', $middle);
                     $middleware = array_shift($role);
-                    if(!class_exists($middleware)){
-                        $middleware = self::getFromCore($middleware);
+                    if (! class_exists($middleware)) {
+                        $middleware = self::getFromCore($middleware, $type);
                     }
                     return (new $middleware)->handle($request, $next, $role);
                 };

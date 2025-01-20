@@ -1,6 +1,10 @@
 <?php
 
+use App\Http\Middlewares\SimpleMiddleware;
 use Ililuminates\Router\Route;
 
-Route::get('api',fn()=>'Welcome to api page');
-Route::get('api/users',fn()=>'Welcome to users api page');
+Route::group(['prefix' => '/api/', 'middleware' => [SimpleMiddleware::class]], function () {
+    Route::get('/', fn() => 'Welcome to api page');
+    Route::get('/users/', fn() => 'Welcome to users api page');
+    Route::get('/article/', fn() => 'Welcome to article api page');
+});

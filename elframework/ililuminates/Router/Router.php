@@ -5,14 +5,8 @@ use Ililuminates\Middleware\Middleware;
 
 class Router
 {
-    protected static $routes = [
-        'GET'    => [],
-        'POST'   => [],
-        'PUT'    => [],
-        'PATCH'  => [],
-        'DELETE' => [],
-    ];
-
+    protected static $routes          = [];
+    protected static $groupAttributes = [];
     private static $public;
 
     /**
@@ -34,8 +28,41 @@ class Router
      */
     public static function add(string $method, string $route, $controller, $action = null, array $middleware = [])
     {
-        $route                         = ltrim($route, '/');
-        self::$routes[$method][$route] = compact('controller', 'action', 'middleware');
+        $route        = self::applyGroupPerfix($route);
+        $middleware   = array_merge(static::getGroupMiddleware(), $middleware);
+        self::$routes = [
+            'method'      => $method,
+            'uri'         => $route,
+            '$controller' => $controller,
+            'action'      => $action,
+            'middleware'  => $middleware,
+        ];
+
+        // $route                         = ltrim($route, '/');
+        // self::$routes[$method][$route] = compact('controller', 'action', 'middleware');
+    }
+
+    public static function group($attributes, $callback)
+    {
+        $previousGroupAttribute  = static::$groupAttributes;
+        static::$groupAttributes = array_merge(static::$groupAttributes, $attributes);
+        call_user_func($callback, new self);
+        static::$groupAttributes = $previousGroupAttribute;
+    }
+
+    protected static function applyGroupPerfix($route)
+    {
+        if (isset(static::$groupAttributes['prefix'])) {
+            $full_route = rtrim(static::$groupAttributes['prefix'], '/') . '/' . ltrim($route, '/');
+            return rtrim(ltrim($full_route, '/'), '/');
+        } else {
+            return $route;
+        }
+    }
+
+    protected static function getGroupMiddleware()
+    {
+        return static::$groupAttributes['middleware'] ?? [];
     }
 
     /**
@@ -56,39 +83,44 @@ class Router
     {
         $uri = ltrim($uri, '/' . static::public_path() . '/');
 
-        foreach (static::$routes[$method] as $key => $value) {
-            $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?P<$1>[a-zA-Z0-9_]+)', $key);
-            $pattern = "#^$pattern$#";
+        // foreach (static::$routes[$method] as $key => $value) {
+        foreach (static::$routes as $route) {
+            echo "<pre>";
+            var_dump(static::$routes['uri']);
 
-            if (preg_match($pattern, $uri, $match)) {
-                $params     = array_filter($match, 'is_string', ARRAY_FILTER_USE_KEY);
-                $controller = $value['controller'];
+            if (static::$routes['method'] == $method) {
+                $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?P<$1>[a-zA-Z0-9_]+)', $route['uri']);
+                $pattern = "#^$pattern$#";
 
-                if (is_object($controller)) {
+                if (preg_match($pattern, $uri, $match)) {
+                    $params     = array_filter($match, 'is_string', ARRAY_FILTER_USE_KEY);
+                    $controller = $route['controller'];
 
-                    $value['middleware'] = $value['action'];
-                    $middleware          = $value['middleware'];
+                    if (is_object($controller)) {
 
-                    $next = function ($request) use ($controller, $params) {
-                        return $controller(...$params);
-                    };
+                        $route['middleware'] = $route['action'];
+                        $middleware          = $route['middleware'];
+                        $next = function ($request) use ($controller, $params) {
+                            return $controller(...$params);
+                        };
 
-                    //Processing middleware if using anonymous fuction
-                    $next = Middleware::handleMiddleware($middleware, $next);
+                        //Processing middleware if using anonymous fuction
+                        $next = Middleware::handleMiddleware($middleware, $next);
 
-                    echo $next($uri);
+                        echo $next($uri);
 
-                } else {
+                    } else {
 
-                    $action     = $value['action'];
-                    $middleware = $value['middleware'];
-                    $next       = function ($request) use ($controller, $action, $params) {
-                        return call_user_func_array([new $controller, $action], $params);
-                    };
-                    //Processing middleware if using a controller
-                    $next = Middleware::handleMiddleware($middleware, $next);
+                        $action     = $route['action'];
+                        $middleware = $route['middleware'];
+                        $next       = function ($request) use ($controller, $action, $params) {
+                            return call_user_func_array([new $controller, $action], $params);
+                        };
+                        //Processing middleware if using a controller
+                        $next = Middleware::handleMiddleware($middleware, $next);
 
-                    echo $next($uri);
+                        echo $next($uri);
+                    }
                 }
 
                 return '';
