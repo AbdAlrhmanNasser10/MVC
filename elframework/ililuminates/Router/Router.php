@@ -30,7 +30,7 @@ class Router
     {
         $route        = self::applyGroupPerfix($route);
         $middleware   = array_merge(static::getGroupMiddleware(), $middleware);
-        self::$routes = [
+        self::$routes[] = [
             'method'      => $method,
             'uri'         => $route,
             '$controller' => $controller,
@@ -86,9 +86,7 @@ class Router
         // foreach (static::$routes[$method] as $key => $value) {
         foreach (static::$routes as $route) {
             echo "<pre>";
-            var_dump(static::$routes['uri']);
-
-            if (static::$routes['method'] == $method) {
+            if ($route['method'] == $method) {
                 $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?P<$1>[a-zA-Z0-9_]+)', $route['uri']);
                 $pattern = "#^$pattern$#";
 
