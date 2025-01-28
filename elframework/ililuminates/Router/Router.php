@@ -1,6 +1,7 @@
 <?php
 namespace Ililuminates\Router;
 
+use Exception;
 use Ililuminates\Middleware\Middleware;
 
 class Router
@@ -10,38 +11,33 @@ class Router
     private static $public;
 
     /**
-     * @return string
+     * Set or return the public path.
      */
     public static function public_path($bind = null): string
     {
         static::$public = $bind ?? '/MVC/public/';
         return static::$public;
     }
+
     /**
-     * @param string $method
-     * @param string $route
-     * @param mixed $controller
-     * @param mixed $action
-     * @param array $middleware
-     *
-     * @return void
+     * Add a new route.
      */
     public static function add(string $method, string $route, $controller, $action = null, array $middleware = [])
     {
-        $route        = self::applyGroupPerfix($route);
-        $middleware   = array_merge(static::getGroupMiddleware(), $middleware);
+        $route          = self::applyGroupPerfix($route);
+        $middleware     = array_merge(static::getGroupMiddleware(), $middleware);
         self::$routes[] = [
-            'method'      => $method,
-            'uri'         => $route,
-            '$controller' => $controller,
-            'action'      => $action,
-            'middleware'  => $middleware,
+            'method'     => $method,
+            'uri'        => ltrim($route,'/'),
+            'controller' => $controller,
+            'action'     => $action,
+            'middleware' => $middleware,
         ];
-
-        // $route                         = ltrim($route, '/');
-        // self::$routes[$method][$route] = compact('controller', 'action', 'middleware');
     }
 
+    /**
+     * Group routes together.
+     */
     public static function group($attributes, $callback)
     {
         $previousGroupAttribute  = static::$groupAttributes;
@@ -50,23 +46,28 @@ class Router
         static::$groupAttributes = $previousGroupAttribute;
     }
 
+    /**
+     * Apply the group prefix to the route.
+     */
     protected static function applyGroupPerfix($route)
     {
         if (isset(static::$groupAttributes['prefix'])) {
             $full_route = rtrim(static::$groupAttributes['prefix'], '/') . '/' . ltrim($route, '/');
             return rtrim(ltrim($full_route, '/'), '/');
-        } else {
-            return $route;
         }
+        return $route;
     }
 
+    /**
+     * Get the middleware for the current group.
+     */
     protected static function getGroupMiddleware()
     {
         return static::$groupAttributes['middleware'] ?? [];
     }
 
     /**
-     * @return static routes
+     * Return all routes.
      */
     public function routes()
     {
@@ -74,57 +75,41 @@ class Router
     }
 
     /**
-     * @param mixed $uri
-     * @param mixed $method
-     *
-     * @return void
+     * Dispatch the request to the appropriate route.
      */
     public static function dispatch($uri, $method)
     {
-        $uri = ltrim($uri, '/' . static::public_path() . '/');
-
-        // foreach (static::$routes[$method] as $key => $value) {
+        $uri =  ltrim($uri, '/' . static::public_path() . '/');
+        $uri = empty($uri) ? '/' : $uri;
         foreach (static::$routes as $route) {
-            echo "<pre>";
             if ($route['method'] == $method) {
+                
                 $pattern = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?P<$1>[a-zA-Z0-9_]+)', $route['uri']);
                 $pattern = "#^$pattern$#";
 
                 if (preg_match($pattern, $uri, $match)) {
-                    $params     = array_filter($match, 'is_string', ARRAY_FILTER_USE_KEY);
-                    $controller = $route['controller'];
+                    $params = array_filter($match, 'is_string', ARRAY_FILTER_USE_KEY);
 
-                    if (is_object($controller)) {
-
-                        $route['middleware'] = $route['action'];
-                        $middleware          = $route['middleware'];
-                        $next = function ($request) use ($controller, $params) {
-                            return $controller(...$params);
+                    if (is_object($route['controller'])) {
+                        $middleware = $route['action'];
+                        $next       = function ($request) use ($route, $params) {
+                            return $route['controller'](...$params);
                         };
-
-                        //Processing middleware if using anonymous fuction
-                        $next = Middleware::handleMiddleware($middleware, $next);
-
-                        echo $next($uri);
-
                     } else {
-
-                        $action     = $route['action'];
                         $middleware = $route['middleware'];
-                        $next       = function ($request) use ($controller, $action, $params) {
-                            return call_user_func_array([new $controller, $action], $params);
+                        $next       = function ($request) use ($route, $params) {
+                            return call_user_func_array([new $route['controller'], $route['action']], $params);
                         };
-                        //Processing middleware if using a controller
-                        $next = Middleware::handleMiddleware($middleware, $next);
-
-                        echo $next($uri);
                     }
-                }
 
-                return '';
+                    // Process middleware
+                    $next = Middleware::handleMiddleware($middleware, $next);
+                    echo $next($uri);
+                    return;
+                }
             }
         }
 
-        throw new \Exception("This page $uri not found");
+        throw new Exception("The requested page ($uri) was not found.");
     }
 }

@@ -3,7 +3,7 @@ namespace App\Http\Middlewares;
 
 use Contracts\Middleware\Contract;
 
-class SimpleMiddleware implements Contract
+class UsersMiddleware implements Contract
 {
     public function handle($request, $next, ...$role)
     {
